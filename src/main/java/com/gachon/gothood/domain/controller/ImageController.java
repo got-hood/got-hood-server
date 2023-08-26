@@ -1,9 +1,6 @@
 package com.gachon.gothood.domain.controller;
 
-import com.gachon.gothood.domain.image.dto.FlaskResponseDto;
-import com.gachon.gothood.domain.image.dto.ImageRateRequestDto;
-import com.gachon.gothood.domain.image.dto.ImageRateResponseDto;
-import com.gachon.gothood.domain.image.dto.ImageUploadResponseDto;
+import com.gachon.gothood.domain.image.dto.*;
 import com.gachon.gothood.domain.image.service.ImageService;
 import com.gachon.gothood.global.response.BaseResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +17,7 @@ public class ImageController {
 
     @PostMapping("/image/rate")
     public BaseResponseDto<ImageRateResponseDto> rateFavorite(@RequestBody List<ImageRateRequestDto> requests) {
-        return imageService.rate(requests);
+        return new BaseResponseDto<>(imageService.rate(requests));
     }
 
     @PostMapping("/image/recog")
@@ -35,4 +32,9 @@ public class ImageController {
         return new BaseResponseDto<>(imageService.uploadImage(multipartFile));
     }
 
+    @PostMapping("/admin/image")
+    public BaseResponseDto<ImageRegisterResponseDto> createImage(@RequestPart("file") MultipartFile multipartFile,
+                                                                 @RequestPart("gender") ImageRegisterRequestDto requestDto) {
+        return new BaseResponseDto<>(imageService.registerImage(multipartFile, requestDto));
+    }
 }

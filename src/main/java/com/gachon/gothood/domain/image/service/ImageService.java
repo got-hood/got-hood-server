@@ -1,10 +1,9 @@
 package com.gachon.gothood.domain.image.service;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.gachon.gothood.domain.image.dto.FlaskResponseDto;
-import com.gachon.gothood.domain.image.dto.ImageRateRequestDto;
-import com.gachon.gothood.domain.image.dto.ImageRateResponseDto;
-import com.gachon.gothood.domain.image.dto.ImageUploadResponseDto;
+import com.gachon.gothood.domain.image.dto.*;
+import com.gachon.gothood.domain.image.entity.Image;
+import com.gachon.gothood.domain.image.repository.ImageRepository;
 import com.gachon.gothood.global.response.BaseResponseDto;
 import com.gachon.gothood.global.response.BusinessException;
 import com.gachon.gothood.global.response.ErrorMessage;
@@ -31,8 +30,9 @@ import java.util.Optional;
 public class ImageService {
 
     private final S3Service s3Service;
+    private final ImageRepository imageRepository;
 
-    public BaseResponseDto<ImageRateResponseDto> rate(List<ImageRateRequestDto> requests) {
+    public ImageRateResponseDto rate(List<ImageRateRequestDto> requests) {
         Optional<ImageRateRequestDto> maxRate = requests.stream()
                 .max(Comparator.comparingDouble(ImageRateRequestDto::getRate));
         if (maxRate.isEmpty()) {
@@ -44,8 +44,9 @@ public class ImageService {
         // 파이썬 서버에 이미지 보내기
         // 받은 내용을 담기
         String contents = "good!";
-        return new BaseResponseDto<>(ImageRateResponseDto.of(favoriteGirlId, contents));
+        return ImageRateResponseDto.of(favoriteGirlId, contents);
     }
+
     public FlaskResponseDto getRecognitionResult(MultipartFile file) {
 
         HttpHeaders headers = new HttpHeaders();
@@ -83,5 +84,18 @@ public class ImageService {
         } else {
             throw new BusinessException(ErrorMessage.INVALID_FILE_UPLOAD);
         }
+    }
+
+
+    public ImageRegisterResponseDto registerImage(MultipartFile multipartFile, ImageRegisterRequestDto requestDto) {
+        ImageUploadResponseDto responseDto = uploadImage(multipartFile);
+        Image image = Image.builder()
+                .imageUrl(responseDto.getUrl())
+                .gender(requestDto.getGender())
+                .build();
+
+        imageRepository.save(image);
+
+        return ImageRegisterResponseDto.of(image.getImageUrl(), image.getGender());
     }
 }
