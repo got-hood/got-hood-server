@@ -1,12 +1,13 @@
 package com.gachon.gothood.domain.image.service;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.gachon.gothood.domain.image.dto.FlaskResponseDto;
 import com.gachon.gothood.domain.image.dto.ImageRateRequestDto;
 import com.gachon.gothood.domain.image.dto.ImageRateResponseDto;
 import com.gachon.gothood.domain.image.dto.ImageUploadResponseDto;
 import com.gachon.gothood.global.response.BaseResponseDto;
 import com.gachon.gothood.global.response.BusinessException;
 import com.gachon.gothood.global.response.ErrorMessage;
-import com.gachon.gothood.domain.image.dto.FlaskResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
@@ -73,7 +74,7 @@ public class ImageService {
         Optional<String> imgUrl;
         try {
             imgUrl = Optional.ofNullable(s3Service.upload(multipartFile));
-        } catch (IOException e) {
+        } catch (IOException | AmazonS3Exception e) {
             throw new BusinessException(ErrorMessage.INVALID_FILE_UPLOAD);
         }
 
