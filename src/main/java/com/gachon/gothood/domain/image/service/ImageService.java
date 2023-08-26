@@ -5,12 +5,23 @@ import com.gachon.gothood.domain.image.dto.ImageRateResponseDto;
 import com.gachon.gothood.global.response.BaseResponseDto;
 import com.gachon.gothood.global.response.BusinessException;
 import com.gachon.gothood.global.response.ErrorMessage;
+import com.gachon.gothood.domain.image.dto.FlaskResponseDto;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class ImageService {
 
@@ -27,5 +38,28 @@ public class ImageService {
         // 받은 내용을 담기
         String contents = "good!";
         return new BaseResponseDto<>(ImageRateResponseDto.of(favoriteGirlId, contents));
+    }
+    public FlaskResponseDto getRecognitionResult(MultipartFile file) {
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        try {
+            body.add("file", new ByteArrayResource(file.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return file.getOriginalFilename();
+                }
+            });
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        return restTemplate.postForEntity("http://localhost:5000/rekog", requestEntity, FlaskResponseDto.class).getBody();
     }
 }
